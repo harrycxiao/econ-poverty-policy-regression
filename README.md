@@ -106,3 +106,19 @@ Interest rate variables show stronger statistical relationships with poverty tha
 - Residual diagnostics
 - Randomization tests
 - Bootstrap confidence intervals
+
+---
+
+## Files
+- `poverty_analysis.Rmd` – main analysis file with code, plots, and explanations
+- `EconData.csv` – dataset used for regression analysis
+- `jsr_paper.pdf` – published research paper based on this analysis
+
+---
+
+## How to Run
+Open the R Markdown file in RStudio and run all chunks:
+
+1. Install required packages if needed
+2. Open `poverty_analysis.Rmd`
+3. Click **Knit** or run all code cells
