@@ -1,0 +1,203 @@
+---
+title: "R Studio Data Analysis"
+author: "Harry Xiao"
+date: "2024-08-01"
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+
+Poverty <- read.csv("EconData.csv")
+#First, I ran a model for poverty on each of the individual predictor variables to see how well each of the individual predictors correlated with the poverty rate.
+
+#Simple Linear Regression of Annual Poverty Rate on the Annual Average Federal Funds.
+ffrate_line <- lm(Poverty$PRate ~ Poverty$FFrate)
+plot(y = Poverty$PRate ,
+     x = Poverty$FFrate,
+     main = "Poverty Rate vs Federal Funds Rate",
+     xlab = "Federal Funds Rate",
+     ylab = "Povety Rate")
+abline(ffrate_line)
+summary(ffrate_line)
+plot(ffrate_line$residuals~ffrate_line$fitted.values,
+     ylab = "residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(ffrate_line$residuals)
+
+#Simple Linear Regression of Annual Poverty Rateon the Annual Average Discount Rate.
+drate_line <- lm(Poverty$PRate ~ Poverty$DRate)
+plot(y = Poverty$PRate ,
+     x = Poverty$DRate,
+     main = "Poverty Rate vs Discount Rate",
+     xlab = "Discount Rate",
+     ylab = "Povety Rate")
+abline(drate_line)
+summary(drate_line)
+plot(drate_line$residuals~drate_line$fitted.values,
+     ylab = "residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(drate_line$residuals)
+
+
+#Simple Linear Regression of Annual Poverty Rate on Annual Government Spending.
+govspend_line <- lm(Poverty$PRate ~ Poverty$GovSpend)
+plot(y = Poverty$PRate ,
+     x = Poverty$GovSpend,
+     main = "Poverty Rate vs Government Spending",
+     xlab = "Government Spending",
+     ylab = "Povety Rate")
+abline(govspend_line)
+summary(govspend_line)
+plot(govspend_line$residuals~govspend_line$fitted.values,
+     ylab = "residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(govspend_line$residuals)
+
+
+#From the simple linear regression models, the significant p-values of 0.0104 and 0.0143 for the federal funds rate and discount rate suggested that the slopes for both were likely not zero. However, the R^2 values for these were both only around 0.2, showing a weak positive correlation.For government spending, the slope was not significantly different from 0 due to the very high p-value of 0.485 and the R^2 value was only 0.01823.
+
+#Multiple linear regression of the poverty rate on all three predictor variables.
+full_line <- lm(Poverty$PRate ~ Poverty$GovSpend + Poverty$DRate + Poverty$FFrate)
+summary(full_line)
+plot(full_line$residuals~full_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(full_line$residuals)
+#When I ran the regression of poverty on all three predictor variables, the p-values for the federal funds rate and discount rate became much larger, indicating that there is likely multicollinearity between the two interest rates. The p-value for government spending actually decreased significantly to 0.114 in the full model.
+#Additionally, the residual plot showed a clear pattern and the normal probability plot was not linear at the two tails, making the conditions not met.
+#To check for multicollinearity between the discount rate and federal funds rate, I ran a linear regression betewen them.
+
+#Check for multicollinearity for the discount rate and federal funds rate.
+fdrate_line <- lm(Poverty$DRate ~ Poverty$FFrate)
+summary(fdrate_line)
+#The coefficient of determination between the federal funds rate and discount rate is significantly large enough at 0.9303 to show that there is clear evidence of multicollinearity.
+
+feddis_line <- lm(Poverty$PRate ~ Poverty$FFrate + Poverty$DRate)
+summary(feddis_line)
+plot(feddis_line$residuals~feddis_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(feddis_line$residuals)
+#This if further confirmed in the multiple linear regression of poverty on the federal funds and discount rate where both of the p-values are now very large at 0.46 and 0.97, respectively.
+
+#Due to the large correlation between the federal funds rate and the discount, I decided to run two new models using two predictor variables. One using government spending and the federal funds rate, and one using government spending and the discount rate.
+
+#Prior to doing this I ran a regression between government spending with the federal funds rate and government spending with the discount rate to make sure that there was no multicollinearity between government spending with either one of the two interest rates.
+
+#Check for multicollinearity between the federal funds rate and government spending.
+fgrate_line <- lm(Poverty$FFrate ~ Poverty$GovSpend)
+summary(fgrate_line)
+#The coefficient of determination between the federal funds rate and government spending was 0.4969, suggesting that there is no multicollinearity.
+
+#Check for multicollinearity between the discount rate and government spending.
+dgrate_line <- lm(Poverty$DRate ~ Poverty$GovSpend)
+summary(dgrate_line)
+#The coefficient of determination between the discount rate and government spending was 0.4774, suggesting that there is no multicollinearity.
+
+#Multiple linear regression of poverty on government spending and the federal funds rate.
+govfed_line <- lm(Poverty$PRate ~ Poverty$GovSpend + Poverty$FFrate)
+summary(govfed_line)
+plot(govfed_line$residuals~govfed_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(govfed_line$residuals)
+
+#Multiple linear regression of poverty on government spending and the discount rate.
+govdis_line <- lm(Poverty$PRate ~ Poverty$GovSpend + Poverty$DRate)
+summary(govdis_line)
+plot(govdis_line$residuals~govdis_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(govdis_line$residuals)
+
+#The two multiple linear regression models using government spending and a form of inters rate both were better than the full model and the individual models. The p-values for the federal funds rate in the two predictor model went down to just 0.00366, and the p-value for government spending was 0.10702. The p-values for the discount rate in the two predictor model went down to just 0.00702, and the p-value for government spending was 0.16092. Additionally, the R^2 values for both of these two predictor models were higher than the R^Squared values for any of the individual predictor models or the three predictor model.
+
+#However, both of these two regression models have residual plots that exhibit a pattern, showing a failure to meet the equal variance condition.
+#To fix this issue, I will try different transformations on the data to try to get rid of the pattern.
+
+#After testing many transformations for the two two predictor models, I found that the R^2 value for the model with the federal funds rate was always much higher than that of the model with the discount rate, so I decided to focus on the model with the federal funds rate. After testing various transformations, I found that the best transformation on the predictors, I found that keeping government spending the same and taking the natural log of the federal funds rate created the best R^2 value.
+
+tgovfed_line <- lm(Poverty$PRate ~ Poverty$GovSpend + log(Poverty$FFrate))
+summary(tgovfed_line)
+plot(tgovfed_line$residuals~tgovfed_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(tgovfed_line$residuals)
+
+#The R^2 value is now significantly higher at 0.5854. Additionally, both the p-values are very small with the p-value of the federal funds rate being only essentially 0 and the government spending p-value being 0.00208. However, looking at the residual plot, while it looks like it has less pattern, there is still a sine wave pattern. The normal probability plot also seems to have some curvature with an influential point at the top right.
+
+#Before using randomization, I also wanted to try a full second order model with the federal funds rate and government spending to see if this could give a higher r-squared value or get rid of the pattern in the residual plot.
+
+Squarespend <- (Poverty$FFrate)**2
+Squarefrate <- (Poverty$GovSpend)**2
+
+interaction_line <- lm(Poverty$PRate ~ Squarefrate + Poverty$GovSpend*Poverty$FFrate)
+summary(interaction_line)
+plot(interaction_line$residuals~interaction_line$fitted.values,
+     ylab ="residuals")
+abline(a=NULL, b=NULL, h=0, v=NULL)
+qqnorm(interaction_line$residuals)
+
+#The interaction model also had a much higher R^2 value than any of the previous models beside the transformed model. It had an R^2 value of 0.5607. Additionally, the individual p-values for the square of the federal funds rate, the government spending, and the interaction term between government spending and the federal funds rate had p-values less than 0.05.  
+
+#Since none of the models I tried worked, I used randomization on the transformed model to see if the effect of log federal funds and government spending actually had significance in predicting the variation in poverty.
+
+library(mosaic)
+set.seed(124)
+N = 10000
+poverty <- c((Poverty$PRate))
+many = do(N)*cor(shuffle(poverty) ~ Poverty$GovSpend + log(Poverty$FFrate))
+manyr = many$cor
+head(manyr)
+hist((manyr),
+     xlab = "R",
+     ylab = "Number of Data Values",
+     main = "R Values for 10000 Randomizations")
+high=sum((manyr)>= 0.7588149)
+low=sum((manyr)<= -0.7588149)
+#Using randomization, I randomly assigned each of the transformed poverty values to the predictor variables for the transformed two model predictor that I previously got the highest R value for, for a total of 10000 samples. Then I produced the distribution of the R values for the samples and found that  0 out of the 10000 randomized samples had an absolute R value equal to or higher than the absolute value of the R value of the original transformed model. Since the p-value is only 0.0000, I rejected the null.
+
+library(mosaic)
+N = 10000
+set.seed(124)
+ok = do(N)*lm(PRate ~ GovSpend + log(FFrate), data=resample(Poverty))
+histogram((ok$GovSpend),
+     ylab = "Number of Data Values",
+     main = "Slope Values for Government Spending",
+     xlab= "slopes")
+histogram((ok$log.FFrate.),
+     ylab = "Number of Data Values",
+     main = "Slope Values for log of Federal Funds Rate",
+     xlab= "slopes")
+histogram((ok$r.squared),
+     ylab = "Number of Data Values",
+     main = "R^2 values of Bootstrap distribution",
+     xlab= "R^2 values")
+low1<-quantile(ok$GovSpend,probs=0.025) 
+high1<-quantile(ok$GovSpend,probs=0.975)
+low2<-quantile(ok$log.FFrate.,probs=0.025) 
+high2<-quantile(ok$log.FFrate,probs=0.975)
+low3<-quantile(ok$r.squared,probs=0.025) 
+high3<-quantile(ok$r.squared,probs=0.975)
+#The 95 percent confidence interval for slope of government spending is (-0.000183,-0.0000318). The 95 percent confidence interval for slope of the log of federal funds rate is (-1.026,-0.575).The 95 percent confidence interval for the R^2 value is (0.338,0.775).
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
